@@ -1,0 +1,12 @@
+{
+  // The core modules' lib holds no DOM and their types hold no runtime's
+  // globals, so code in them that reaches for the document, the window or
+  // fetch fails to type-check, as Flare's headless/tsconfig.json does.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["es2024"],
+    "types": []
+  },
+  "include": [],
+  "files": ["src/address.ts", "src/table.ts", "src/a11y.ts"]
+}

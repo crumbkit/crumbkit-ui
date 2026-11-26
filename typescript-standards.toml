@@ -1,0 +1,29 @@
+# The adoption map of @crumbkit/ui: the headless core in src/address.ts,
+# src/table.ts and src/a11y.ts, and its React binding in src/react.ts.
+
+schema = "typescript-standards/adoption/v1"
+standards = { version = "0.1.0", commit = "59d74aa" }
+
+profiles = ["base"]
+
+[[decision]]
+id = "lanes"
+requirement = """
+- Lane: `lane` in .github/workflows/ci.yml, on each pull request and each push to main. It runs zizmor on the workflows, then install, lint, typecheck, knip, test, build and bundle. Its budget is fifteen minutes, the job's timeout. A merge waits for it once branch protection requires it.
+- The lane leaves out the template's schemas, size, browsers and acceptance steps, because the package has no generated schemas, no page to load and nothing a browser renders.
+- Lane: `advisories` in .github/workflows/ci.yml runs `pnpm audit` daily at 06:43 UTC, on each push to main and on workflow_dispatch (BASE-17). Nothing waits for it.
+"""
+reason = "The package's modules are small and their tests take seconds. A pull request that breaks one, or that leaves dist/ out of step with the source, fails before merge."
+realizations = [".github/workflows/ci.yml", "package.json"]
+
+[[decision]]
+id = "committed-dist"
+requirement = "`pnpm run build` runs `tsc -p tsconfig.build.json`, which writes ESM and declarations for each subpath into dist/. dist/ is committed, and the `bundle` step fails when git reports any changed, deleted, untracked or ignored file under dist/ after the build, as EMB-1 words it for an embedded bundle."
+reason = "Consumers install a git tag. A committed build means the install runs no script, so their `allowBuilds: {}` stays empty (BASE-14), and the bundle step means the shipped files are the ones the reviewed source builds. The owner chose this over shipping TypeScript source."
+realizations = ["package.json", "tsconfig.build.json", ".github/workflows/ci.yml", ".gitignore"]
+
+[[decision]]
+id = "core-without-dom"
+requirement = "tsconfig.core.json sets `lib` to es2024 alone and `types` to an empty list for src/address.ts, src/table.ts and src/a11y.ts, and `pnpm run typecheck` runs it after tsconfig.json."
+reason = "The core must run under any front end and in Node. A reference to `document`, `window` or `fetch` in a core module fails `tsc` instead of waiting for a reviewer. src/core.test.ts checks that the config refuses each of them."
+realizations = ["tsconfig.core.json", "package.json", "src/core.test.ts"]

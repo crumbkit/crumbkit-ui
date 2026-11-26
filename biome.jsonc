@@ -1,0 +1,78 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  // Biome formats and lints every file git tracks (BASE-2, BASE-10), except
+  // the built dist/, which tsc writes.
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "includes": ["**", "!dist", "!pnpm-lock.yaml"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "assist": {
+    "actions": { "source": { "organizeImports": "on" } }
+  },
+  "linter": {
+    "enabled": true,
+    // The types domain turns on Biome's type inference, which the promise
+    // and switch rules below need.
+    "domains": {
+      "react": "recommended",
+      "test": "recommended",
+      "types": "recommended",
+      "project": "recommended"
+    },
+    "rules": {
+      "preset": "recommended",
+      "a11y": "error",
+      "correctness": {
+        "useExhaustiveDependencies": "error",
+        "useHookAtTopLevel": "error",
+        "noNestedComponentDefinitions": "error",
+        "noUnusedImports": "error",
+        "noUnusedVariables": "error"
+      },
+      "style": {
+        "noNonNullAssertion": "error", // BASE-3
+        "noEnum": "error", // BASE-4
+        "noNamespace": "error", // BASE-4
+        "noNestedTernary": "error", // BASE-9
+        "noRestrictedGlobals": {
+          "level": "error",
+          "options": {
+            // BASE-7. The package stores nothing and calls no network.
+            "deniedGlobals": {
+              "fetch": "The package calls no network (BASE-7).",
+              "localStorage": "The package stores nothing (BASE-7).",
+              "sessionStorage": "The package stores nothing (BASE-7)."
+            }
+          }
+        }
+      },
+      "suspicious": {
+        "noExplicitAny": "error", // BASE-3
+        "noTsIgnore": "error", // BASE-3
+        "noConsole": "error", // BASE-7
+        "noImportCycles": "error", // BASE-8
+        "noFocusedTests": "error", // BASE-12
+        "noSkippedTests": "error" // BASE-12
+      },
+      "performance": {
+        "noBarrelFile": "error", // BASE-8
+        "noReExportAll": "error" // BASE-8
+      },
+      // Nursery rules can change in a minor release of Biome. The exact
+      // Biome pin (BASE-13) means a change arrives only in the weekly update
+      // pull request, where a new finding shows.
+      "nursery": {
+        "noUnsafeTypeAssertion": "error", // BASE-3
+        "noFloatingPromises": "error", // BASE-5
+        "noMisusedPromises": "error", // BASE-5
+        "useExhaustiveSwitchCases": "error" // BASE-6
+      }
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "name": "@crumbkit/ui",
+  "version": "0.1.0",
+  "description": "Headless TypeScript building blocks for crumbkit's web front ends: filters held in the page address, table sorting and grouping, accessibility helpers, and React hooks over them that render nothing.",
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/crumbkit/crumbkit-ui.git"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "packageManager": "pnpm@12.15.0",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    "./address": {
+      "types": "./dist/address.d.ts",
+      "default": "./dist/address.js"
+    },
+    "./table": {
+      "types": "./dist/table.d.ts",
+      "default": "./dist/table.js"
+    },
+    "./a11y": {
+      "types": "./dist/a11y.d.ts",
+      "default": "./dist/a11y.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "default": "./dist/react.js"
+    }
+  },
+  "scripts": {
+    "lint": "biome ci --error-on-warnings .",
+    "fix": "biome check --write .",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.core.json",
+    "knip": "knip",
+    "test": "vitest run",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "bundle": "test -z \"$(git status --porcelain --untracked-files=all --ignored -- dist | tee /dev/stderr)\""
+  },
+  "peerDependencies": {
+    "react": ">=19.3.1 <20"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.8",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.12",
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "jsdom": "31.0.1",
+    "knip": "6.45.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
+  }
+}
