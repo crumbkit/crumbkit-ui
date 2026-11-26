@@ -1,0 +1,16 @@
+{
+  // Emits the ESM and declarations that consumers install from dist/. The
+  // relative imports name .ts files, and tsc rewrites them to .js.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "rewriteRelativeImportExtensions": true,
+    "allowImportingTsExtensions": false,
+    "types": [],
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": [],
+  "files": ["src/address.ts", "src/table.ts", "src/a11y.ts", "src/react.ts"]
+}

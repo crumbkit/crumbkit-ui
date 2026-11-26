@@ -1,0 +1,5 @@
+node_modules/
+*.tsbuildinfo
+# dist/ holds the committed build that consumers install from a git tag, so
+# a global ignore of dist must not hide it.
+!dist/
