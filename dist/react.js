@@ -7,12 +7,22 @@ import { nextSort } from "./table.js";
 /**
  * Returns the values `codec` reads from `source.search`, and a function that
  * navigates to the address of those values with `change` applied. The state
- * lives only in the address, so a reload or a shared link keeps it.
+ * lives only in the address, so a reload or a shared link keeps it. Several
+ * changes in one handler each apply on top of the one before, until the
+ * next render reads the address again.
  */
 export function useAddressState(codec, source) {
     const { search, navigate } = source;
     const value = useMemo(() => codec.parse(search), [codec, search]);
-    const change = useCallback((next) => navigate(codec.format({ ...value, ...next })), [codec, navigate, value]);
+    // The value the last change navigated to, and the parsed value it built
+    // on. A new parsed value means the address moved, so changes build on it.
+    const latest = useRef({ base: value, pending: value });
+    const change = useCallback((next) => {
+        const start = latest.current.base === value ? latest.current.pending : value;
+        const pending = { ...start, ...next };
+        latest.current = { base: value, pending };
+        navigate(codec.format(pending));
+    }, [codec, navigate, value]);
     return [value, change];
 }
 /**
@@ -62,6 +72,7 @@ export function usePressed(options) {
  * Returns prop getters for a grid of `rows` by `columns` cells with one tab
  * stop. The arrow keys, Home, End and Ctrl or Command with Home or End move
  * focus between cells, and a cell that takes focus becomes the tab stop.
+ * A key pressed in a control inside a cell is left to that control.
  */
 export function useGrid({ rows, columns }) {
     const [active, setActive] = useState({ row: 0, column: 0 });
@@ -79,6 +90,11 @@ export function useGrid({ rows, columns }) {
         getGridProps: () => ({
             role: "grid",
             onKeyDown: (event) => {
+                // A key pressed in a control inside a cell, such as a text field,
+                // stays with that control.
+                const fromCell = [...cells.current.values()].some((cell) => cell === event.target);
+                if (!fromCell)
+                    return;
                 const to = gridMove(current, {
                     key: event.key,
                     ctrlKey: event.ctrlKey,
@@ -110,13 +126,24 @@ export function useGrid({ rows, columns }) {
  * Returns focus, when the component that calls it unmounts, to the element
  * that had focus as it first rendered, such as the row that opened a
  * detail panel. Focus stays where it is when that element has left the page.
+ * Focus moves a microtask after the unmount.
  */
 export function useFocusReturn() {
     // Read during the first render, before an autoFocus inside the component
     // moves focus.
     const [opener] = useState(() => document.activeElement instanceof HTMLElement ? document.activeElement : null);
-    useEffect(() => () => {
-        if (opener?.isConnected === true)
-            opener.focus();
+    const mounted = useRef(false);
+    useEffect(() => {
+        mounted.current = true;
+        return () => {
+            mounted.current = false;
+            // StrictMode runs this cleanup and the effect again at once on the
+            // first mount. Focus returns only when the effect did not run again,
+            // so the unmount is real.
+            queueMicrotask(() => {
+                if (!mounted.current && opener?.isConnected === true)
+                    opener.focus();
+            });
+        };
     }, [opener]);
 }

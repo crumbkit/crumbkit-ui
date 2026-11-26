@@ -34,7 +34,9 @@ export declare function id(): Field<string | null>;
 /**
  * Returns the codec of `fields`. A field the address lacks, names twice or
  * gives a value it does not know takes its default. `format` writes the
- * fields in the order `fields` defines them.
+ * fields in the order `fields` defines them, except that a key that is a
+ * number, such as "2", comes first, because a JavaScript object lists such
+ * keys first and the order they were written in is lost.
  */
 export declare function defineAddress<const F extends Record<string, Field<unknown>>>(fields: F): Codec<{
     readonly [K in keyof F]: FieldValue<F[K]>;

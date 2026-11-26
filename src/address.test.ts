@@ -68,3 +68,10 @@ describe("defineAddress", () => {
     expect(codec.parse("?q=node+go").q).toBe("node go");
   });
 });
+
+describe("defineAddress with a key that is a number", () => {
+  it("writes a key that is a number first, because a plain object lists such keys first", () => {
+    const numbered = defineAddress({ view: oneOf(["a", "b"], "a"), "2": text("") });
+    expect(numbered.format({ view: "b", "2": "x" })).toBe("?2=x&view=b");
+  });
+});

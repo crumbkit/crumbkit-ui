@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { useEffect, useRef, useState } from "react";
+import { StrictMode, useEffect, useRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { defineAddress, manyOf, oneOf } from "./address.ts";
 import { useAddressState, useFocusReturn, useGrid, usePressed, useSortHeader } from "./react.ts";
@@ -23,6 +23,15 @@ function AddressView({ search, navigate }: { search: string; navigate: (s: strin
       <button type="button" onClick={() => change({ view: "rules", state: [] })}>
         Reset
       </button>
+      <button
+        type="button"
+        onClick={() => {
+          change({ view: "repositories" });
+          change({ state: ["pass"] });
+        }}
+      >
+        Both
+      </button>
     </>
   );
 }
@@ -41,6 +50,13 @@ describe("useAddressState", () => {
     expect(navigate).toHaveBeenLastCalledWith("?view=repositories&state=fail");
     await userEvent.click(screen.getByRole("button", { name: "Reset" }));
     expect(navigate).toHaveBeenLastCalledWith("");
+  });
+
+  it("applies every change made in one handler, each on top of the last", async () => {
+    const navigate = vi.fn();
+    render(<AddressView search="" navigate={navigate} />);
+    await userEvent.click(screen.getByRole("button", { name: "Both" }));
+    expect(navigate).toHaveBeenLastCalledWith("?view=repositories&state=pass");
   });
 });
 
@@ -225,12 +241,79 @@ function Page() {
   );
 }
 
+function GridWithInput() {
+  const grid = useGrid({ rows: 1, columns: 2 });
+  return (
+    <table {...grid.getGridProps()} aria-label="Edits">
+      <tbody>
+        <tr {...grid.getRowProps()}>
+          <td {...grid.getCellProps(0, 0)}>
+            <input aria-label="Name" defaultValue="abc" />
+          </td>
+          <td {...grid.getCellProps(0, 1)}>r0c1</td>
+        </tr>
+      </tbody>
+    </table>
+  );
+}
+
+describe("useGrid with a control in a cell", () => {
+  it("leaves the arrow keys, Home and End to a text field inside a cell", async () => {
+    const user = userEvent.setup();
+    render(<GridWithInput />);
+    const field = screen.getByRole("textbox", { name: "Name" });
+    await user.click(field);
+    await user.keyboard("{ArrowRight}{Home}{End}{ArrowLeft}");
+    expect(field).toHaveFocus();
+  });
+});
+
 describe("useFocusReturn", () => {
   it("returns focus to the element that had it when the panel opened", async () => {
     const user = userEvent.setup();
     render(<Page />);
     await user.click(screen.getByRole("button", { name: "Open rule" }));
     expect(screen.getByRole("button", { name: "Close" })).toHaveFocus();
+    await user.click(screen.getByRole("button", { name: "Close" }));
+    expect(screen.getByRole("button", { name: "Open rule" })).toHaveFocus();
+  });
+});
+
+function AutoFocusPanel({ onClose }: { onClose: () => void }) {
+  useFocusReturn();
+  return (
+    <div role="dialog" aria-label="Rule">
+      {/* biome-ignore lint/a11y/noAutofocus: the test checks that the hook keeps an autoFocus. */}
+      <input aria-label="Note" autoFocus />
+      <button type="button" onClick={onClose}>
+        Close
+      </button>
+    </div>
+  );
+}
+
+function AutoFocusPage() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)}>
+        Open rule
+      </button>
+      {open && <AutoFocusPanel onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
+describe("useFocusReturn under StrictMode", () => {
+  it("keeps focus on the panel's autoFocus field and still returns it when the panel closes", async () => {
+    const user = userEvent.setup();
+    render(
+      <StrictMode>
+        <AutoFocusPage />
+      </StrictMode>,
+    );
+    await user.click(screen.getByRole("button", { name: "Open rule" }));
+    expect(screen.getByRole("textbox", { name: "Note" })).toHaveFocus();
     await user.click(screen.getByRole("button", { name: "Close" }));
     expect(screen.getByRole("button", { name: "Open rule" })).toHaveFocus();
   });

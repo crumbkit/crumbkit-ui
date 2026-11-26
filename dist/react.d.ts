@@ -12,7 +12,9 @@ export interface AddressSource {
 /**
  * Returns the values `codec` reads from `source.search`, and a function that
  * navigates to the address of those values with `change` applied. The state
- * lives only in the address, so a reload or a shared link keeps it.
+ * lives only in the address, so a reload or a shared link keeps it. Several
+ * changes in one handler each apply on top of the one before, until the
+ * next render reads the address again.
  */
 export declare function useAddressState<V extends object>(codec: Codec<V>, source: AddressSource): readonly [V, (change: Partial<V>) => void];
 /** The props of a sortable column's header cell. */
@@ -86,6 +88,7 @@ export interface GridCellProps {
  * Returns prop getters for a grid of `rows` by `columns` cells with one tab
  * stop. The arrow keys, Home, End and Ctrl or Command with Home or End move
  * focus between cells, and a cell that takes focus becomes the tab stop.
+ * A key pressed in a control inside a cell is left to that control.
  */
 export declare function useGrid({ rows, columns }: {
     readonly rows: number;
@@ -101,5 +104,6 @@ export declare function useGrid({ rows, columns }: {
  * Returns focus, when the component that calls it unmounts, to the element
  * that had focus as it first rendered, such as the row that opened a
  * detail panel. Focus stays where it is when that element has left the page.
+ * Focus moves a microtask after the unmount.
  */
 export declare function useFocusReturn(): void;

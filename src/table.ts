@@ -13,7 +13,11 @@ export interface Sort<K extends string> {
 /** A value a row sorts by: a number, text, or null when the row has none. */
 export type SortValue = number | string | null;
 
-/** One key of a sort: the value of each row and the direction it sorts in. */
+/**
+ * One key of a sort: the value of each row and the direction it sorts in.
+ * A key returns numbers or text for every row, never a mix, and never NaN;
+ * a mix sorts in no consistent order and NaN ties with every value.
+ */
 export interface SortKey<R> {
   readonly value: (row: R) => SortValue;
   readonly direction: Direction;
